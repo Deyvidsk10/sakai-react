@@ -12,16 +12,80 @@ Sistema web de gestão para pizzaria, com **frontend em Next.js + PrimeReact (te
 | Entidade | Campos | Operações |
 | --- | --- | --- |
 | **Clientes** | Nome, Telefone, CEP, Logradouro, Número, Complemento, Bairro, Município, UF | CRUD completo. CEP preenchido pelo **ViaCEP**; estados e municípios vindos do **IBGE** |
-| **Produtos** | Nome, Descrição, Preço, Categoria (Pizza / Bebida / Sobremesa) | CRUD completo, filtro por categoria |
-| **Pedidos** | Cliente, Itens (produto + quantidade), Status, Valor Total, Data/Hora, Observação | CRUD completo, troca rápida de status, detalhe dos itens. **O valor total é calculado pela API** |
-| **Usuários** | Nome, E-mail, Senha (bcrypt), Perfil (admin / atendente) | CRUD completo (só admin), login, cadastro e logout |
+| **Produtos** | Nome, Descrição, Preço, Categoria | CRUD completo, filtro por categoria |
+| **Categorias** | Nome (Pizza, Bebida, Sobremesa + as criadas pelo usuário) | Criar direto no formulário de produto; renomear e excluir pela API |
+| **Pedidos** | Cliente, Itens (produto + quantidade), Status, Valor Total, Data/Hora, Observação | CRUD completo, troca rápida de status, detalhe dos itens e **cadastro rápido de cliente** dentro do pedido. **O valor total é calculado pela API** |
+| **Usuários** | Nome, E-mail, Senha (bcrypt), Perfil (admin / atendente / cliente) | CRUD completo (só admin), login, cadastro e logout |
 
 Extras:
 - **Dashboard** com totais, faturamento, últimos pedidos e gráfico de pedidos por status.
 - **Rotas protegidas** no backend (middleware JWT) e no frontend (`AuthGuard` + interceptor do Axios que volta para o login se o token expirar).
-- **Perfis**: `admin` gerencia usuários; `atendente` usa clientes, produtos e pedidos.
+- **Perfis de acesso** (o perfil é conferido no banco a cada requisição, então uma troca feita pelo admin vale na hora):
+
+  | Perfil | O que acessa |
+  | --- | --- |
+  | `admin` | Tudo, inclusive a tela **Usuários**, onde altera o perfil das contas |
+  | `atendente` | Dashboard, pedidos, clientes e produtos/categorias |
+  | `cliente` | Somente o **cardápio** (consulta). **Toda conta criada pela tela de cadastro começa como cliente**; o admin promove para atendente quando necessário |
+- **Cadastro rápido de cliente no pedido**: o atendente digita o nome na busca e, se o cliente não existir, cadastra ali mesmo (telefone opcional) e segue com o pedido.
 - Regras de integridade: não é possível excluir cliente com pedidos ou produto já vendido; o último admin não pode ser rebaixado; ninguém exclui a si mesmo.
 - Layout **responsivo**: no celular as tabelas viram cartões.
+
+## 🖼️ Telas
+
+### Login
+![Tela de login](docs/telas/01-login.png)
+
+### Dashboard
+Totais, faturamento (sem os pedidos cancelados), últimos pedidos e gráfico de pedidos por status.
+
+![Dashboard](docs/telas/02-dashboard.png)
+
+### Pedidos
+Lista com troca rápida de status e detalhe dos itens de cada pedido.
+
+![Lista de pedidos](docs/telas/03-pedidos.png)
+
+Novo pedido: o total é calculado na hora (e confirmado pela API ao salvar).
+
+![Novo pedido](docs/telas/04-novo-pedido.png)
+
+Cadastro rápido de cliente: o atendente digita o nome; se o cliente não existir, cadastra ali mesmo e ele já fica selecionado no pedido.
+
+![Busca de cliente no pedido](docs/telas/05-cliente-rapido-busca.png)
+![Cadastro rápido de cliente](docs/telas/06-cliente-rapido-cadastro.png)
+
+### Clientes
+![Lista de clientes](docs/telas/07-clientes.png)
+
+Endereço preenchido pelo **ViaCEP** e estado/município vindos do **IBGE**.
+
+![Novo cliente com ViaCEP](docs/telas/08-novo-cliente-viacep.png)
+
+### Produtos e categorias
+![Lista de produtos](docs/telas/09-produtos.png)
+
+Criação de uma nova categoria sem sair do formulário de produto.
+
+![Nova categoria](docs/telas/10-nova-categoria.png)
+
+### Usuários (somente admin)
+O admin define o perfil de cada conta: administrador, atendente ou cliente.
+
+![Usuários](docs/telas/11-usuarios.png)
+
+### Cardápio (perfil cliente)
+Contas criadas pela tela de cadastro começam como cliente e só veem o cardápio até o admin alterar o perfil.
+
+![Cardápio do cliente](docs/telas/13-cardapio-cliente.png)
+
+### Documentação Swagger
+![Swagger](docs/telas/12-swagger.png)
+
+### Celular
+No celular as tabelas viram cartões.
+
+<img src="docs/telas/14-celular-pedidos.png" alt="Pedidos no celular" width="320">
 
 ## 🧱 Tecnologias
 
@@ -35,11 +99,12 @@ Extras:
 .
 ├── app/                     # Páginas do Next.js
 │   ├── (full-page)/auth/    # login, cadastro, acesso negado
-│   └── (main)/              # dashboard, clientes, produtos, pedidos, usuarios
+│   └── (main)/              # dashboard, clientes, produtos, pedidos, usuarios, cardapio
 ├── layout/                  # Layout Sakai (menu, topbar) + AuthGuard
 ├── services/                # Axios (api.ts) e serviços de cada entidade + ViaCEP/IBGE
 ├── types/pizzaria.d.ts      # Tipos das entidades
-├── utils/formatadores.ts    # Moeda, data, telefone
+├── utils/formatadores.ts    # Moeda, data, telefone, CEP
+├── docs/telas/              # Capturas de tela usadas neste README
 └── backend/                 # API REST
     ├── server.js            # Sobe o servidor
     ├── app.js               # Express, CORS, Swagger, rotas, erros
@@ -91,16 +156,18 @@ Para testar rotas protegidas: execute `POST /auth/login`, copie o `token`, cliqu
 | Método | Rota | Descrição | Proteção |
 | --- | --- | --- | --- |
 | POST | `/auth/login` | Login, retorna o JWT | pública |
-| POST | `/auth/register` | Cadastro (perfil atendente) | pública |
+| POST | `/auth/register` | Cadastro (perfil cliente) | pública |
 | GET | `/auth/me` | Usuário logado | JWT |
-| GET/POST | `/clientes` | Listar / criar | JWT |
-| GET/PUT/DELETE | `/clientes/:id` | Buscar / atualizar / excluir | JWT |
-| GET/POST | `/produtos` | Listar (`?categoria=`) / criar | JWT |
-| GET/PUT/DELETE | `/produtos/:id` | Buscar / atualizar / excluir | JWT |
-| GET/POST | `/pedidos` | Listar (`?status=`) / criar | JWT |
-| GET/PUT/DELETE | `/pedidos/:id` | Buscar / atualizar / excluir | JWT |
-| PATCH | `/pedidos/:id/status` | Alterar só o status | JWT |
-| GET | `/pedidos/resumo` | Dados do dashboard | JWT |
+| GET/POST | `/clientes` | Listar / criar | JWT + admin/atendente |
+| GET/PUT/DELETE | `/clientes/:id` | Buscar / atualizar / excluir | JWT + admin/atendente |
+| GET | `/produtos`, `/produtos/:id` | Listar (`?categoria=`) / buscar | JWT (qualquer perfil) |
+| POST/PUT/DELETE | `/produtos`, `/produtos/:id` | Criar / atualizar / excluir | JWT + admin/atendente |
+| GET | `/categorias` | Listar categorias (com total de produtos) | JWT (qualquer perfil) |
+| POST/PUT/DELETE | `/categorias`, `/categorias/:id` | Criar / renomear / excluir (se não tiver produtos) | JWT + admin/atendente |
+| GET/POST | `/pedidos` | Listar (`?status=`) / criar | JWT + admin/atendente |
+| GET/PUT/DELETE | `/pedidos/:id` | Buscar / atualizar / excluir | JWT + admin/atendente |
+| PATCH | `/pedidos/:id/status` | Alterar só o status | JWT + admin/atendente |
+| GET | `/pedidos/resumo` | Dados do dashboard | JWT + admin/atendente |
 | GET/POST | `/usuarios` | Listar / criar | JWT + admin |
 | GET/PUT/DELETE | `/usuarios/:id` | Buscar / atualizar / excluir | JWT + admin |
 
