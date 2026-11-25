@@ -7,6 +7,41 @@ Sistema web de gestão para pizzaria, com **frontend em Next.js + PrimeReact (te
 
 ---
 
+## 🖼️ Telas
+
+<!-- Capturas do sistema (clique na imagem para ver em tamanho real) - [Deyvidsk10] -->
+<table>
+  <tr>
+    <td align="center" valign="top"><a href="docs/telas/01-login.png"><img src="docs/telas/01-login.png" alt="Login" width="260"></a><br><sub>Login</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/02-dashboard.png"><img src="docs/telas/02-dashboard.png" alt="Dashboard" width="260"></a><br><sub>Dashboard</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/03-pedidos.png"><img src="docs/telas/03-pedidos.png" alt="Pedidos" width="260"></a><br><sub>Pedidos</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/telas/04-novo-pedido.png"><img src="docs/telas/04-novo-pedido.png" alt="Novo pedido (total calculado)" width="260"></a><br><sub>Novo pedido (total calculado)</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/05-cliente-rapido-busca.png"><img src="docs/telas/05-cliente-rapido-busca.png" alt="Busca de cliente no pedido" width="260"></a><br><sub>Busca de cliente no pedido</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/06-cliente-rapido-cadastro.png"><img src="docs/telas/06-cliente-rapido-cadastro.png" alt="Cadastro rápido de cliente" width="260"></a><br><sub>Cadastro rápido de cliente</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/telas/07-clientes.png"><img src="docs/telas/07-clientes.png" alt="Clientes" width="260"></a><br><sub>Clientes</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/08-novo-cliente-viacep.png"><img src="docs/telas/08-novo-cliente-viacep.png" alt="Novo cliente (ViaCEP + IBGE)" width="260"></a><br><sub>Novo cliente (ViaCEP + IBGE)</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/09-produtos.png"><img src="docs/telas/09-produtos.png" alt="Produtos" width="260"></a><br><sub>Produtos</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/telas/10-nova-categoria.png"><img src="docs/telas/10-nova-categoria.png" alt="Nova categoria" width="260"></a><br><sub>Nova categoria</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/11-usuarios.png"><img src="docs/telas/11-usuarios.png" alt="Usuários e perfis (admin)" width="260"></a><br><sub>Usuários e perfis (admin)</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/13-cardapio-cliente.png"><img src="docs/telas/13-cardapio-cliente.png" alt="Cardápio (perfil cliente)" width="260"></a><br><sub>Cardápio (perfil cliente)</sub></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><a href="docs/telas/12-swagger.png"><img src="docs/telas/12-swagger.png" alt="Documentação Swagger" width="260"></a><br><sub>Documentação Swagger</sub></td>
+    <td align="center" valign="top"><a href="docs/telas/14-celular-pedidos.png"><img src="docs/telas/14-celular-pedidos.png" alt="Versão para celular" width="120"></a><br><sub>Versão para celular</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+> Clique em uma imagem para ver em tamanho real. Os arquivos ficam em `docs/telas/`.
+
+---
+
 ## ✅ Funcionalidades
 
 | Entidade | Campos | Operações |
@@ -30,62 +65,6 @@ Extras:
 - **Cadastro rápido de cliente no pedido**: o atendente digita o nome na busca e, se o cliente não existir, cadastra ali mesmo (telefone opcional) e segue com o pedido.
 - Regras de integridade: não é possível excluir cliente com pedidos ou produto já vendido; o último admin não pode ser rebaixado; ninguém exclui a si mesmo.
 - Layout **responsivo**: no celular as tabelas viram cartões.
-
-## 🖼️ Telas
-
-### Login
-![Tela de login](docs/telas/01-login.png)
-
-### Dashboard
-Totais, faturamento (sem os pedidos cancelados), últimos pedidos e gráfico de pedidos por status.
-
-![Dashboard](docs/telas/02-dashboard.png)
-
-### Pedidos
-Lista com troca rápida de status e detalhe dos itens de cada pedido.
-
-![Lista de pedidos](docs/telas/03-pedidos.png)
-
-Novo pedido: o total é calculado na hora (e confirmado pela API ao salvar).
-
-![Novo pedido](docs/telas/04-novo-pedido.png)
-
-Cadastro rápido de cliente: o atendente digita o nome; se o cliente não existir, cadastra ali mesmo e ele já fica selecionado no pedido.
-
-![Busca de cliente no pedido](docs/telas/05-cliente-rapido-busca.png)
-![Cadastro rápido de cliente](docs/telas/06-cliente-rapido-cadastro.png)
-
-### Clientes
-![Lista de clientes](docs/telas/07-clientes.png)
-
-Endereço preenchido pelo **ViaCEP** e estado/município vindos do **IBGE**.
-
-![Novo cliente com ViaCEP](docs/telas/08-novo-cliente-viacep.png)
-
-### Produtos e categorias
-![Lista de produtos](docs/telas/09-produtos.png)
-
-Criação de uma nova categoria sem sair do formulário de produto.
-
-![Nova categoria](docs/telas/10-nova-categoria.png)
-
-### Usuários (somente admin)
-O admin define o perfil de cada conta: administrador, atendente ou cliente.
-
-![Usuários](docs/telas/11-usuarios.png)
-
-### Cardápio (perfil cliente)
-Contas criadas pela tela de cadastro começam como cliente e só veem o cardápio até o admin alterar o perfil.
-
-![Cardápio do cliente](docs/telas/13-cardapio-cliente.png)
-
-### Documentação Swagger
-![Swagger](docs/telas/12-swagger.png)
-
-### Celular
-No celular as tabelas viram cartões.
-
-<img src="docs/telas/14-celular-pedidos.png" alt="Pedidos no celular" width="320">
 
 ## 🧱 Tecnologias
 
