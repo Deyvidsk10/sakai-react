@@ -9,11 +9,15 @@
         "3000": { "label": "Pizzaria (frontend)", "onAutoForward": "openBrowser" },
         "3001": { "label": "API + Swagger", "onAutoForward": "silent" }
     },
+    // Esconde as portas internas que o Next.js abre (números aleatórios) - [Deyvidsk10]
+    "otherPortsAttributes": { "onAutoForward": "ignore" },
 
     // Roda uma vez, quando o Codespace é criado - [Deyvidsk10]
     "postCreateCommand": "bash .devcontainer/setup.sh",
     // Roda toda vez que o Codespace liga (inclusive depois de "dormir") - [Deyvidsk10]
     "postStartCommand": "bash .devcontainer/start.sh",
+    // Roda quando o editor do Codespace abre: garante que o que caiu volte a subir - [Deyvidsk10]
+    "postAttachCommand": "bash .devcontainer/start.sh",
 
     "customizations": {
         "vscode": {

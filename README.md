@@ -161,13 +161,14 @@ O repositório já vem configurado (pasta `.devcontainer/`). Ao criar o Codespac
 
 O frontend chama a API pelo caminho **`/backend`**, que o `next.config.js` repassa para a porta 3001. Por isso **só a porta 3000 precisa ser pública**. O Swagger fica em `<link-da-porta-3000>/backend/api-docs/`.
 
-> O Codespace desliga sozinho depois de ~30 min sem uso. Antes de apresentar ou de o professor testar, abra o Codespace novamente: a aplicação sobe automaticamente (confira se a porta 3000 continua pública).
+> O Codespace desliga sozinho depois de ~30 min sem uso (dá para aumentar até 4 h em **GitHub → Settings → Codespaces → Default idle timeout**). Antes de apresentar ou de o professor testar, abra o Codespace novamente: a API e o frontend sobem automaticamente (confira se a porta 3000 continua pública).
 
 Comandos úteis no terminal do Codespace:
 
 ```bash
 tail -f /tmp/pizzaria-api.log /tmp/pizzaria-front.log   # ver os logs
-bash .devcontainer/start.sh                              # reiniciar API + frontend
+bash .devcontainer/start.sh                              # sobe o que estiver parado
+bash .devcontainer/start.sh --reiniciar                  # reinicia API + frontend
 ```
 
 Para expor a API separadamente (opcional): torne a porta 3001 pública, crie `.env.local` na raiz com `NEXT_PUBLIC_API_URL=<url-da-porta-3001>` e coloque a URL do frontend em `CORS_ORIGIN` no `backend/.env`.
