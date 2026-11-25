@@ -70,7 +70,7 @@ npm run api
 npm run dev
 ```
 
-Ou tudo em um terminal (Linux/Mac/Codespaces/Replit): `npm run dev:full`.
+Ou tudo em um terminal (Linux/Mac): `npm run dev:full`.
 
 Acesse **http://localhost:3000** e entre com o admin criado automaticamente:
 
@@ -104,14 +104,27 @@ Para testar rotas protegidas: execute `POST /auth/login`, copie o `token`, cliqu
 | GET/POST | `/usuarios` | Listar / criar | JWT + admin |
 | GET/PUT/DELETE | `/usuarios/:id` | Buscar / atualizar / excluir | JWT + admin |
 
-## 🌐 Hospedagem (Codespaces / Replit)
+## 🌐 Rodando no GitHub Codespaces
 
-O frontend chama a API pelo caminho **`/backend`**, que o `next.config.js` repassa para `http://localhost:3001`. Assim **só a porta 3000 precisa ficar pública**:
+O repositório já vem configurado (pasta `.devcontainer/`). Ao criar o Codespace ele **instala tudo, cria o `backend/.env` com um JWT_SECRET aleatório e sobe a API e o frontend sozinho**.
 
-1. Rode `npm run setup`, crie o `backend/.env` e rode `npm run dev:full`.
-2. No Codespaces, abra a aba **Ports** e deixe a porta **3000** como *Public*.
+1. No GitHub, clique em **Code → Codespaces → Create codespace** (na branch que contém o projeto).
+2. Espere a instalação terminar (na primeira vez leva alguns minutos).
+3. Abra a aba **Ports**, clique com o botão direito na porta **3000** → **Port Visibility → Public**.
+4. Copie o endereço da porta 3000 (algo como `https://<nome>-3000.app.github.dev`): esse é o link do projeto online.
 
-Se preferir expor a API separadamente, torne a porta 3001 pública, crie `.env.local` na raiz com `NEXT_PUBLIC_API_URL=<url-da-porta-3001>` e coloque a URL do frontend em `CORS_ORIGIN` no `backend/.env`.
+O frontend chama a API pelo caminho **`/backend`**, que o `next.config.js` repassa para a porta 3001. Por isso **só a porta 3000 precisa ser pública**. O Swagger fica em `<link-da-porta-3000>/backend/api-docs/`.
+
+> O Codespace desliga sozinho depois de ~30 min sem uso. Antes de apresentar ou de o professor testar, abra o Codespace novamente: a aplicação sobe automaticamente (confira se a porta 3000 continua pública).
+
+Comandos úteis no terminal do Codespace:
+
+```bash
+tail -f /tmp/pizzaria-api.log /tmp/pizzaria-front.log   # ver os logs
+bash .devcontainer/start.sh                              # reiniciar API + frontend
+```
+
+Para expor a API separadamente (opcional): torne a porta 3001 pública, crie `.env.local` na raiz com `NEXT_PUBLIC_API_URL=<url-da-porta-3001>` e coloque a URL do frontend em `CORS_ORIGIN` no `backend/.env`.
 
 ## 🔐 CORS
 
