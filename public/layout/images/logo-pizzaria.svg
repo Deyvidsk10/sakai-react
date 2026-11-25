@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Logo da pizzaria (fatia de pizza) - [Deyvidsk10] -->
+  <path d="M32 6 C46 6 58 12 60 16 L32 60 L4 16 C6 12 18 6 32 6 Z" fill="#F4A340"/>
+  <path d="M32 6 C46 6 58 12 60 16 C52 12 42 10 32 10 C22 10 12 12 4 16 C6 12 18 6 32 6 Z" fill="#C2691B"/>
+  <path d="M8 18 C16 14 24 13 32 13 C40 13 48 14 56 18 L32 55 Z" fill="#FFD166"/>
+  <circle cx="24" cy="24" r="4.5" fill="#D62828"/>
+  <circle cx="39" cy="23" r="4.5" fill="#D62828"/>
+  <circle cx="32" cy="36" r="4.5" fill="#D62828"/>
+  <circle cx="30" cy="20" r="1.6" fill="#2A9D8F"/>
+  <circle cx="43" cy="31" r="1.6" fill="#2A9D8F"/>
+  <circle cx="22" cy="32" r="1.6" fill="#2A9D8F"/>
+</svg>
