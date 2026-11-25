@@ -38,3 +38,9 @@ export function formatarTelefone(valor: string): string {
     if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
 }
+
+// Formata o CEP enquanto digita: 01001-000 - [Deyvidsk10]
+export function formatarCep(valor: string): string {
+    const d = valor.replace(/\D/g, '').slice(0, 8);
+    return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}

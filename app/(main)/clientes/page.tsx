@@ -7,7 +7,6 @@ import { DataTable } from 'primereact/datatable';
 import { Dialog } from 'primereact/dialog';
 import { Divider } from 'primereact/divider';
 import { Dropdown } from 'primereact/dropdown';
-import { InputMask, InputMaskChangeEvent } from 'primereact/inputmask';
 import { InputText } from 'primereact/inputtext';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
@@ -17,7 +16,7 @@ import { ClienteService } from '../../../services/clienteService';
 import { LocalidadeService } from '../../../services/localidadeService';
 import { mensagemErro } from '../../../services/api';
 import { Cliente, EstadoIBGE, MunicipioIBGE } from '../../../types/pizzaria';
-import { formatarTelefone } from '../../../utils/formatadores';
+import { formatarCep, formatarTelefone } from '../../../utils/formatadores';
 
 const clienteVazio: Cliente = {
     nome: '',
@@ -114,6 +113,17 @@ const ClientesPage = () => {
             avisar('error', 'Falha ao consultar o ViaCEP');
         } finally {
             setBuscandoCep(false);
+        }
+    };
+
+    // Formata o CEP e, quando tiver 8 dígitos (e for diferente do anterior), consulta o ViaCEP - [Deyvidsk10]
+    const alterarCep = (valor: string) => {
+        const cep = formatarCep(valor);
+        const anterior = (cliente.cep ?? '').replace(/\D/g, '');
+        alterarCampo('cep', cep);
+        const digitos = cep.replace(/\D/g, '');
+        if (digitos.length === 8 && digitos !== anterior) {
+            buscarCep(cep);
         }
     };
 
@@ -308,15 +318,8 @@ const ClientesPage = () => {
                                 <label htmlFor="cep">CEP</label>
                                 <span className="p-input-icon-right">
                                     {buscandoCep && <i className="pi pi-spin pi-spinner" />}
-                                    {/* onComplete dispara quando os 8 dígitos foram digitados - [Deyvidsk10] */}
-                                    <InputMask
-                                        id="cep"
-                                        mask="99999-999"
-                                        value={cliente.cep ?? ''}
-                                        onChange={(e: InputMaskChangeEvent) => alterarCampo('cep', e.target.value ?? '')}
-                                        onComplete={(e) => buscarCep(e.value ?? '')}
-                                        placeholder="00000-000"
-                                    />
+                                    {/* Formata enquanto digita e consulta o ViaCEP ao completar os 8 dígitos - [Deyvidsk10] */}
+                                    <InputText id="cep" inputMode="numeric" value={cliente.cep ?? ''} onChange={(e) => alterarCep(e.target.value)} placeholder="00000-000" />
                                 </span>
                                 <small className="text-500">O endereço é preenchido pelo ViaCEP</small>
                             </div>
