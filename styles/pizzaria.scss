@@ -1,0 +1,61 @@
+// Estilos próprios do sistema da pizzaria - [Deyvidsk10]
+
+// O título da coluna (gerado pelo DataTable no modo "stack") fica escondido no desktop - [Deyvidsk10]
+.p-datatable-responsive-stack > .p-datatable-wrapper > .p-datatable-table > .p-datatable-tbody > tr > td > .p-column-title {
+    display: none;
+}
+
+// Abaixo de 960px cada linha da tabela vira um "cartão" com rótulo + valor - [Deyvidsk10]
+@media screen and (max-width: 960px) {
+    // Seletores com ">" para não afetar tabelas aninhadas (ex.: itens do pedido) - [Deyvidsk10]
+    .p-datatable.p-datatable-responsive-stack > .p-datatable-wrapper > .p-datatable-table {
+        width: 100%;
+        min-width: 0 !important;
+
+        > .p-datatable-thead > tr > th,
+        > .p-datatable-tfoot > tr > td {
+            display: none !important;
+        }
+
+        > .p-datatable-tbody > tr > td {
+            // float + clear tiram a célula do layout de tabela, empilhando uma embaixo da outra - [Deyvidsk10]
+            float: left;
+            clear: left;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            width: 100% !important;
+            min-width: 0 !important;
+            overflow-wrap: anywhere;
+            text-align: left;
+            border: 0 none;
+
+            > .p-column-title {
+                display: inline-block;
+                min-width: 35%;
+                font-weight: 600;
+            }
+
+            &:last-child {
+                border-bottom: 1px solid var(--surface-border);
+            }
+        }
+
+        // Coluna do botão de expandir (sem título) fica alinhada à esquerda - [Deyvidsk10]
+        > .p-datatable-tbody > tr > td:has(.p-row-toggler) {
+            justify-content: flex-start;
+        }
+
+        // Linha de detalhes (itens do pedido) ocupa a largura toda - [Deyvidsk10]
+        > .p-datatable-tbody > tr.p-datatable-row-expansion > td {
+            display: block;
+            overflow-x: auto;
+            overflow-wrap: normal;
+
+            .p-datatable-table {
+                min-width: 30rem;
+            }
+        }
+    }
+}

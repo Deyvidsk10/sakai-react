@@ -1,0 +1,23 @@
+// Configuração do GitHub Codespaces: instala tudo e sobe API + frontend sozinho - [Deyvidsk10]
+{
+    "name": "Pizzaria Fullstack",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+    // 3000 = frontend (é a porta que precisa ficar pública); 3001 = API - [Deyvidsk10]
+    "forwardPorts": [3000, 3001],
+    "portsAttributes": {
+        "3000": { "label": "Pizzaria (frontend)", "onAutoForward": "openBrowser" },
+        "3001": { "label": "API + Swagger", "onAutoForward": "silent" }
+    },
+
+    // Roda uma vez, quando o Codespace é criado - [Deyvidsk10]
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+    // Roda toda vez que o Codespace liga (inclusive depois de "dormir") - [Deyvidsk10]
+    "postStartCommand": "bash .devcontainer/start.sh",
+
+    "customizations": {
+        "vscode": {
+            "extensions": ["dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+        }
+    }
+}
