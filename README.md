@@ -3,7 +3,7 @@
 Sistema web de gestão para pizzaria, com **frontend em Next.js + PrimeReact (template Sakai)** e **API REST em Node.js/Express** com autenticação **JWT**, banco **SQLite** e documentação **Swagger**.
 
 > Projeto da atividade Fullstack — tema **Pizzaria**.
-> Equipe: **Deyvidsk10** _(adicione aqui o nome do(a) colega, se houver)_
+> Equipe: **Deyvidsk10**
 
 ---
 
