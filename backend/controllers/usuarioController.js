@@ -2,7 +2,7 @@
 const model = require('../models/usuarioModel');
 const { HttpError, lerId, texto } = require('../utils/http');
 
-const PERFIS = ['admin', 'atendente'];
+const PERFIS = ['admin', 'atendente', 'cliente'];
 
 // Valida o corpo da requisição; a senha só é obrigatória na criação - [Deyvidsk10]
 function validar(body, { criando }) {
@@ -10,14 +10,14 @@ function validar(body, { criando }) {
         nome: texto(body.nome),
         email: texto(body.email)?.toLowerCase(),
         senha: body.senha ? String(body.senha) : null,
-        perfil: texto(body.perfil) || 'atendente'
+        perfil: texto(body.perfil) || 'cliente'
     };
 
     if (!dados.nome) throw new HttpError(400, 'O nome é obrigatório');
     if (!dados.email || !/^\S+@\S+\.\S+$/.test(dados.email)) throw new HttpError(400, 'Informe um e-mail válido');
     if (criando && !dados.senha) throw new HttpError(400, 'A senha é obrigatória');
     if (dados.senha && dados.senha.length < 6) throw new HttpError(400, 'A senha deve ter pelo menos 6 caracteres');
-    if (!PERFIS.includes(dados.perfil)) throw new HttpError(400, 'Perfil inválido (use admin ou atendente)');
+    if (!PERFIS.includes(dados.perfil)) throw new HttpError(400, 'Perfil inválido (use admin, atendente ou cliente)');
 
     return dados;
 }

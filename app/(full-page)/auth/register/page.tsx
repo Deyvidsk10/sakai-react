@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 'use client';
-// Tela de cadastro público (cria usuário com perfil "atendente") - [Deyvidsk10]
+// Tela de cadastro público (cria usuário com perfil "cliente"; o admin promove depois) - [Deyvidsk10]
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useContext, useState } from 'react';
@@ -51,7 +51,7 @@ const RegisterPage = () => {
                     <div className="text-center mb-5">
                         <img src="/layout/images/logo-pizzaria.svg" alt="Pizzaria" height="56" className="mb-3" />
                         <div className="text-900 text-3xl font-medium mb-2">Criar conta</div>
-                        <span className="text-600 font-medium">Novos usuários entram com perfil de atendente</span>
+                        <span className="text-600 font-medium">Novas contas começam com perfil de cliente</span>
                     </div>
 
                     {erro && <Message severity="error" text={erro} className="w-full mb-4" />}

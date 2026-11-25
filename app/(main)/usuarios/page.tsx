@@ -19,10 +19,18 @@ import { mensagemErro } from '../../../services/api';
 import { Usuario } from '../../../types/pizzaria';
 import { formatarDataHora } from '../../../utils/formatadores';
 
+// Contas criadas pela tela de cadastro começam como "cliente"; o admin promove aqui - [Deyvidsk10]
 const PERFIS = [
     { label: 'Administrador', value: 'admin' },
-    { label: 'Atendente', value: 'atendente' }
+    { label: 'Atendente', value: 'atendente' },
+    { label: 'Cliente', value: 'cliente' }
 ];
+
+const ESTILO_PERFIL: Record<string, { rotulo: string; cor: 'danger' | 'success' | 'info'; icone: string }> = {
+    admin: { rotulo: 'Administrador', cor: 'danger', icone: 'pi pi-shield' },
+    atendente: { rotulo: 'Atendente', cor: 'success', icone: 'pi pi-briefcase' },
+    cliente: { rotulo: 'Cliente', cor: 'info', icone: 'pi pi-user' }
+};
 
 const usuarioVazio: Usuario = { nome: '', email: '', senha: '', perfil: 'atendente' };
 
@@ -123,11 +131,10 @@ const UsuariosPage = () => {
         </>
     );
     const emailTemplate = (u: Usuario) => <>{u.email}</>;
-    const perfilTemplate = (u: Usuario) => (
-        <>
-            <Tag value={u.perfil === 'admin' ? 'Administrador' : 'Atendente'} severity={u.perfil === 'admin' ? 'danger' : 'success'} icon={u.perfil === 'admin' ? 'pi pi-shield' : 'pi pi-user'} />
-        </>
-    );
+    const perfilTemplate = (u: Usuario) => {
+        const estilo = ESTILO_PERFIL[u.perfil] ?? ESTILO_PERFIL.cliente;
+        return <Tag value={estilo.rotulo} severity={estilo.cor} icon={estilo.icone} />;
+    };
     const criadoTemplate = (u: Usuario) => (
         <>
             {/* A data do SQLite vem em UTC sem fuso; o "Z" faz o navegador converter para o horário local - [Deyvidsk10] */}

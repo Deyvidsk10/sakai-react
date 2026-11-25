@@ -148,7 +148,8 @@ const ClientesPage = () => {
         setEnviado(false);
     };
 
-    const telefoneValido = (tel: string) => tel.replace(/\D/g, '').length >= 10;
+    // Telefone é opcional, mas se for preenchido precisa ter DDD + número - [Deyvidsk10]
+    const telefoneValido = (tel: string) => !tel || tel.replace(/\D/g, '').length >= 10;
 
     const salvar = async () => {
         setEnviado(true);
@@ -213,14 +214,15 @@ const ClientesPage = () => {
             <span className="font-medium">{c.nome}</span>
         </>
     );
-    const telefoneTemplate = (c: Cliente) => (
-        <>
+    const telefoneTemplate = (c: Cliente) =>
+        c.telefone ? (
             <a href={`tel:${c.telefone.replace(/\D/g, '')}`} className="no-underline">
                 <i className="pi pi-phone mr-1 text-sm" />
                 {c.telefone}
             </a>
-        </>
-    );
+        ) : (
+            <span className="text-500">Sem telefone</span>
+        );
     const acoesTemplate = (c: Cliente) => (
         <div className="flex gap-2">
             <Button icon="pi pi-pencil" rounded severity="success" aria-label="Editar" onClick={() => editar(c)} />
@@ -293,7 +295,7 @@ const ClientesPage = () => {
                                 {enviado && !cliente.nome.trim() && <small className="p-error">O nome é obrigatório.</small>}
                             </div>
                             <div className="field col-12 md:col-5">
-                                <label htmlFor="telefone">Telefone *</label>
+                                <label htmlFor="telefone">Telefone</label>
                                 <InputText
                                     id="telefone"
                                     inputMode="tel"

@@ -6,16 +6,25 @@ import { MenuProvider } from './context/menucontext';
 import { AppMenuItem } from '../types/types';
 import { AuthService } from '../services/authService';
 import { API_URL } from '../services/api';
+import { Perfil } from '../types/pizzaria';
 
-// Menu lateral da pizzaria; o item "Usuários" só aparece para administradores - [Deyvidsk10]
+// Menu lateral da pizzaria, montado conforme o perfil do usuário - [Deyvidsk10]
 const AppMenu = () => {
-    const [ehAdmin, setEhAdmin] = useState(false);
+    const [perfil, setPerfil] = useState<Perfil | undefined>();
 
     useEffect(() => {
-        setEhAdmin(AuthService.ehAdmin());
+        setPerfil(AuthService.getUsuario()?.perfil);
     }, []);
 
-    const model: AppMenuItem[] = [
+    // Perfil cliente: só o cardápio - [Deyvidsk10]
+    const menuCliente: AppMenuItem[] = [
+        {
+            label: 'Pizzaria',
+            items: [{ label: 'Cardápio', icon: 'pi pi-fw pi-book', to: '/cardapio' }]
+        }
+    ];
+
+    const menuEquipe: AppMenuItem[] = [
         {
             label: 'Início',
             items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
@@ -30,7 +39,7 @@ const AppMenu = () => {
         },
         {
             label: 'Administração',
-            visible: ehAdmin,
+            visible: perfil === 'admin',
             items: [{ label: 'Usuários', icon: 'pi pi-fw pi-id-card', to: '/usuarios' }]
         },
         {
@@ -41,6 +50,8 @@ const AppMenu = () => {
             ]
         }
     ];
+
+    const model = perfil === 'cliente' ? menuCliente : menuEquipe;
 
     return (
         <MenuProvider>

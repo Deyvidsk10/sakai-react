@@ -29,7 +29,8 @@ async function login(req, res) {
     res.json({ message: 'Login realizado com sucesso', token: gerarToken(usuario), usuario: usuarioPublico });
 }
 
-// POST /auth/register - cadastro público sempre cria perfil "atendente" - [Deyvidsk10]
+// POST /auth/register - cadastro público sempre cria perfil "cliente";
+// o admin promove para atendente pela tela de Usuários quando precisar - [Deyvidsk10]
 async function registrar(req, res) {
     const nome = texto(req.body.nome);
     const email = texto(req.body.email)?.toLowerCase();
@@ -45,7 +46,7 @@ async function registrar(req, res) {
         throw new HttpError(409, 'Já existe um usuário com este e-mail');
     }
 
-    const usuario = await criarUsuario({ nome, email, senha, perfil: 'atendente' });
+    const usuario = await criarUsuario({ nome, email, senha, perfil: 'cliente' });
     res.status(201).json({ message: 'Usuário criado com sucesso', usuario });
 }
 

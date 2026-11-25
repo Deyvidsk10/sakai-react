@@ -1,5 +1,5 @@
 'use client';
-// Página do CRUD de Produtos (pizzas, bebidas e sobremesas) integrada à API via Axios - [Deyvidsk10]
+// Página do CRUD de Produtos (pizzas, bebidas, sobremesas e novas categorias) integrada à API via Axios - [Deyvidsk10]
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
@@ -9,23 +9,22 @@ import { Dropdown } from 'primereact/dropdown';
 import { InputNumber } from 'primereact/inputnumber';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
-import { SelectButton } from 'primereact/selectbutton';
 import { Tag } from 'primereact/tag';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { classNames } from 'primereact/utils';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ProdutoService } from '../../../services/produtoService';
+import { CategoriaService } from '../../../services/categoriaService';
 import { mensagemErro } from '../../../services/api';
-import { Categoria, Produto } from '../../../types/pizzaria';
+import { Categoria, CategoriaProduto, Produto } from '../../../types/pizzaria';
 import { formatarMoeda } from '../../../utils/formatadores';
 
-const CATEGORIAS: Categoria[] = ['Pizza', 'Bebida', 'Sobremesa'];
-
-const ICONE_CATEGORIA: Record<Categoria, string> = {
-    Pizza: 'pi pi-circle-fill',
-    Bebida: 'pi pi-filter-fill',
-    Sobremesa: 'pi pi-star-fill'
+// Ícone e cor das categorias padrão; categorias novas usam uma etiqueta genérica - [Deyvidsk10]
+const ESTILO_CATEGORIA: Record<string, { icone: string; cor: 'warning' | 'info' | 'success' }> = {
+    Pizza: { icone: 'pi pi-circle-fill', cor: 'warning' },
+    Bebida: { icone: 'pi pi-filter-fill', cor: 'info' },
+    Sobremesa: { icone: 'pi pi-star-fill', cor: 'success' }
 };
 
 const produtoVazio: Produto = { nome: '', descricao: '', preco: 0, categoria: 'Pizza' };
@@ -39,6 +38,10 @@ const ProdutosPage = () => {
     const [carregando, setCarregando] = useState(true);
     const [filtroGlobal, setFiltroGlobal] = useState('');
     const [filtroCategoria, setFiltroCategoria] = useState<Categoria | null>(null);
+    const [categorias, setCategorias] = useState<CategoriaProduto[]>([]);
+    const [dialogCategoria, setDialogCategoria] = useState(false);
+    const [novaCategoria, setNovaCategoria] = useState('');
+    const [salvandoCategoria, setSalvandoCategoria] = useState(false);
     const toast = useRef<Toast>(null);
 
     // Busca os produtos na API - [Deyvidsk10]
@@ -53,11 +56,45 @@ const ProdutosPage = () => {
         }
     }, []);
 
+    // Busca as categorias cadastradas (usadas no formulário e no filtro) - [Deyvidsk10]
+    const carregarCategorias = useCallback(async () => {
+        try {
+            setCategorias(await CategoriaService.listar());
+        } catch (error) {
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: mensagemErro(error), life: 4000 });
+        }
+    }, []);
+
     useEffect(() => {
         carregar();
-    }, [carregar]);
+        carregarCategorias();
+    }, [carregar, carregarCategorias]);
 
-    // Aplica o filtro de categoria escolhido no SelectButton - [Deyvidsk10]
+    const nomesCategorias = useMemo(() => categorias.map((c) => c.nome), [categorias]);
+
+    const abrirNovaCategoria = () => {
+        setNovaCategoria('');
+        setDialogCategoria(true);
+    };
+
+    // Cria a categoria na API e já deixa ela selecionada no produto - [Deyvidsk10]
+    const salvarCategoria = async () => {
+        if (!novaCategoria.trim()) return;
+        setSalvandoCategoria(true);
+        try {
+            const criada = await CategoriaService.criar(novaCategoria);
+            await carregarCategorias();
+            setProduto((atual) => ({ ...atual, categoria: criada.nome }));
+            setDialogCategoria(false);
+            toast.current?.show({ severity: 'success', summary: 'Sucesso', detail: `Categoria "${criada.nome}" criada`, life: 3000 });
+        } catch (error) {
+            toast.current?.show({ severity: 'error', summary: 'Erro', detail: mensagemErro(error), life: 4000 });
+        } finally {
+            setSalvandoCategoria(false);
+        }
+    };
+
+    // Aplica o filtro de categoria escolhido na lista - [Deyvidsk10]
     const produtosFiltrados = useMemo(() => (filtroCategoria ? produtos.filter((p) => p.categoria === filtroCategoria) : produtos), [produtos, filtroCategoria]);
 
     const abrirNovo = () => {
@@ -80,7 +117,7 @@ const ProdutosPage = () => {
     // Cria ou atualiza conforme o produto já tenha ID - [Deyvidsk10]
     const salvar = async () => {
         setEnviado(true);
-        if (!produto.nome.trim() || produto.preco === null || produto.preco < 0 || !produto.categoria) return;
+        if (!produto.nome.trim() || !(produto.preco > 0) || !produto.categoria) return;
 
         setSalvando(true);
         try {
@@ -132,11 +169,10 @@ const ProdutosPage = () => {
         </>
     );
     const precoTemplate = (p: Produto) => <>{formatarMoeda(p.preco)}</>;
-    const categoriaTemplate = (p: Produto) => (
-        <>
-            <Tag value={p.categoria} icon={ICONE_CATEGORIA[p.categoria]} severity={p.categoria === 'Pizza' ? 'warning' : p.categoria === 'Bebida' ? 'info' : 'success'} />
-        </>
-    );
+    const categoriaTemplate = (p: Produto) => {
+        const estilo = ESTILO_CATEGORIA[p.categoria];
+        return <Tag value={p.categoria} icon={estilo?.icone ?? 'pi pi-tag'} severity={estilo?.cor} />;
+    };
     const acoesTemplate = (p: Produto) => (
         <div className="flex gap-2">
             <Button icon="pi pi-pencil" rounded severity="success" aria-label="Editar" onClick={() => editar(p)} />
@@ -145,7 +181,8 @@ const ProdutosPage = () => {
     );
 
     const toolbarEsquerda = () => <Button label="Novo produto" icon="pi pi-plus" severity="success" onClick={abrirNovo} />;
-    const toolbarDireita = () => <SelectButton value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.value)} options={CATEGORIAS} className="flex-wrap" />;
+    // Filtro em lista (cabe qualquer quantidade de categorias) - [Deyvidsk10]
+    const toolbarDireita = () => <Dropdown value={filtroCategoria} options={nomesCategorias} onChange={(e) => setFiltroCategoria(e.value)} placeholder="Filtrar por categoria" showClear className="w-full sm:w-15rem" />;
 
     const cabecalho = (
         <div className="flex flex-column md:flex-row md:justify-content-between md:align-items-center gap-2">
@@ -211,19 +248,69 @@ const ProdutosPage = () => {
                                 <label htmlFor="preco">Preço *</label>
                                 <InputNumber
                                     inputId="preco"
-                                    value={produto.preco}
+                                    // Campo vazio (em vez de "R$ 0,00") para o usuário conseguir digitar direto - [Deyvidsk10]
+                                    value={produto.preco || null}
                                     onValueChange={(e) => setProduto({ ...produto, preco: e.value ?? 0 })}
                                     mode="currency"
                                     currency="BRL"
                                     locale="pt-BR"
                                     min={0}
-                                    className={classNames({ 'p-invalid': enviado && produto.preco < 0 })}
+                                    placeholder="R$ 0,00"
+                                    // Seleciona o valor ao clicar: o que for digitado substitui o preço antigo - [Deyvidsk10]
+                                    onFocus={(e) => {
+                                        const campo = e.target;
+                                        setTimeout(() => campo.select(), 0);
+                                    }}
+                                    className={classNames({ 'p-invalid': enviado && !(produto.preco > 0) })}
                                 />
+                                {enviado && !(produto.preco > 0) && <small className="p-error">Informe o preço.</small>}
                             </div>
                             <div className="field col-12 sm:col-6">
                                 <label htmlFor="categoria">Categoria *</label>
-                                <Dropdown inputId="categoria" value={produto.categoria} options={CATEGORIAS} onChange={(e) => setProduto({ ...produto, categoria: e.value })} placeholder="Selecione" />
+                                {/* Lista de categorias + botão para criar uma nova sem sair do formulário - [Deyvidsk10] */}
+                                <div className="p-inputgroup">
+                                    <Dropdown
+                                        inputId="categoria"
+                                        value={produto.categoria}
+                                        options={nomesCategorias}
+                                        onChange={(e) => setProduto({ ...produto, categoria: e.value })}
+                                        placeholder="Selecione"
+                                        className={classNames({ 'p-invalid': enviado && !produto.categoria })}
+                                    />
+                                    <Button icon="pi pi-plus" severity="info" onClick={abrirNovaCategoria} tooltip="Nova categoria" tooltipOptions={{ position: 'top' }} aria-label="Nova categoria" />
+                                </div>
                             </div>
+                        </div>
+                    </Dialog>
+
+                    <Dialog
+                        visible={dialogCategoria}
+                        style={{ width: '380px' }}
+                        breakpoints={{ '641px': '90vw' }}
+                        header="Nova categoria"
+                        modal
+                        className="p-fluid"
+                        onHide={() => setDialogCategoria(false)}
+                        footer={
+                            <>
+                                <Button label="Cancelar" icon="pi pi-times" text onClick={() => setDialogCategoria(false)} />
+                                <Button label="Criar" icon="pi pi-check" loading={salvandoCategoria} disabled={!novaCategoria.trim()} onClick={salvarCategoria} />
+                            </>
+                        }
+                    >
+                        <div className="field">
+                            <label htmlFor="novaCategoria">Nome da categoria</label>
+                            {/* Enter também cria a categoria - [Deyvidsk10] */}
+                            <InputText
+                                id="novaCategoria"
+                                value={novaCategoria}
+                                onChange={(e) => setNovaCategoria(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && salvarCategoria()}
+                                placeholder="Ex.: Esfiha, Calzone, Porções..."
+                                maxLength={40}
+                                autoFocus
+                            />
+                            <small className="text-500">Categorias atuais: {nomesCategorias.join(', ')}</small>
                         </div>
                     </Dialog>
                 </div>

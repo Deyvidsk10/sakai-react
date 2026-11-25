@@ -1,18 +1,19 @@
 // Rotas do CRUD de Produtos (protegidas por JWT) - [Deyvidsk10]
 const express = require('express');
 const controller = require('../controllers/produtoController');
-const { autenticarToken } = require('../middleware/auth');
+const { autenticarToken, somenteEquipe } = require('../middleware/auth');
 const { asyncHandler } = require('../utils/http');
 
 const router = express.Router();
 
+// Qualquer usuário logado pode consultar; criar/alterar/excluir é só para admin e atendente - [Deyvidsk10]
 router.use(autenticarToken);
 
 /**
  * @swagger
  * tags:
  *   - name: Produtos
- *     description: Pizzas, bebidas e sobremesas
+ *     description: Pizzas, bebidas, sobremesas e outras categorias
  */
 
 /**
@@ -27,7 +28,7 @@ router.use(autenticarToken);
  *         required: false
  *         schema:
  *           type: string
- *           enum: [Pizza, Bebida, Sobremesa]
+ *           example: Pizza
  *         description: Filtra pela categoria
  *     responses:
  *       200:
@@ -62,7 +63,7 @@ router.use(autenticarToken);
  *       400: { description: Dados inválidos }
  */
 router.get('/', asyncHandler(controller.listar));
-router.post('/', asyncHandler(controller.criar));
+router.post('/', somenteEquipe, asyncHandler(controller.criar));
 
 /**
  * @swagger
@@ -107,7 +108,7 @@ router.post('/', asyncHandler(controller.criar));
  *       409: { description: Produto usado em pedidos }
  */
 router.get('/:id', asyncHandler(controller.buscar));
-router.put('/:id', asyncHandler(controller.atualizar));
-router.delete('/:id', asyncHandler(controller.excluir));
+router.put('/:id', somenteEquipe, asyncHandler(controller.atualizar));
+router.delete('/:id', somenteEquipe, asyncHandler(controller.excluir));
 
 module.exports = router;

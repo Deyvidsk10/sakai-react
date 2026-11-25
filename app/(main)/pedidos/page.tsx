@@ -21,7 +21,7 @@ import { ClienteService } from '../../../services/clienteService';
 import { ProdutoService } from '../../../services/produtoService';
 import { mensagemErro } from '../../../services/api';
 import { Cliente, Pedido, PedidoItem, Produto, StatusPedido } from '../../../types/pizzaria';
-import { formatarDataHora, formatarMoeda, severidadeStatus } from '../../../utils/formatadores';
+import { formatarDataHora, formatarMoeda, formatarTelefone, severidadeStatus } from '../../../utils/formatadores';
 
 const STATUS: StatusPedido[] = ['Recebido', 'Em preparo', 'Saiu para entrega', 'Entregue', 'Cancelado'];
 
@@ -55,6 +55,12 @@ const PedidosPage = () => {
     const [filtroGlobal, setFiltroGlobal] = useState('');
     const [filtroStatus, setFiltroStatus] = useState<StatusPedido | null>(null);
     const [linhasExpandidas, setLinhasExpandidas] = useState<DataTableExpandedRows | DataTableValueArray | undefined>(undefined);
+    // Cadastro rápido de cliente sem sair do pedido - [Deyvidsk10]
+    const [filtroCliente, setFiltroCliente] = useState('');
+    const [dialogCliente, setDialogCliente] = useState(false);
+    const [clienteRapido, setClienteRapido] = useState({ nome: '', telefone: '' });
+    const [salvandoCliente, setSalvandoCliente] = useState(false);
+    const dropdownClienteRef = useRef<Dropdown>(null);
     const toast = useRef<Toast>(null);
 
     const avisar = (severity: 'success' | 'error' | 'warn', detail: string) => {
@@ -86,16 +92,64 @@ const PedidosPage = () => {
     const pedidosFiltrados = useMemo(() => (filtroStatus ? pedidos.filter((p) => p.status === filtroStatus) : pedidos), [pedidos, filtroStatus]);
     const totalPrevisto = useMemo(() => calcularTotal(pedido.itens, produtos), [pedido.itens, produtos]);
 
-    // Opções do dropdown de produtos agrupadas por categoria - [Deyvidsk10]
-    const produtosAgrupados = useMemo(
-        () =>
-            ['Pizza', 'Bebida', 'Sobremesa']
-                .map((categoria) => ({
-                    label: categoria,
-                    items: produtos.filter((p) => p.categoria === categoria).map((p) => ({ label: `${p.nome} — ${formatarMoeda(p.preco)}`, value: p.id }))
-                }))
-                .filter((g) => g.items.length > 0),
-        [produtos]
+    // Opções do dropdown de produtos agrupadas por categoria (inclui categorias criadas pelo usuário) - [Deyvidsk10]
+    const produtosAgrupados = useMemo(() => {
+        const ordem = ['Pizza', 'Bebida', 'Sobremesa'];
+        const categorias = Array.from(new Set(produtos.map((p) => p.categoria))).sort((a, b) => {
+            const ia = ordem.indexOf(a) === -1 ? 99 : ordem.indexOf(a);
+            const ib = ordem.indexOf(b) === -1 ? 99 : ordem.indexOf(b);
+            return ia - ib || a.localeCompare(b);
+        });
+        return categorias.map((categoria) => ({
+            label: categoria,
+            items: produtos.filter((p) => p.categoria === categoria).map((p) => ({ label: `${p.nome} — ${formatarMoeda(p.preco)}`, value: p.id }))
+        }));
+    }, [produtos]);
+
+    // Abre o cadastro rápido já com o nome que o atendente digitou na busca - [Deyvidsk10]
+    const abrirClienteRapido = () => {
+        // hide() existe no componente, mas não está na tipagem do PrimeReact 9 - [Deyvidsk10]
+        (dropdownClienteRef.current as unknown as { hide?: () => void } | null)?.hide?.();
+        setClienteRapido({ nome: filtroCliente.trim(), telefone: '' });
+        setDialogCliente(true);
+    };
+
+    const telefoneRapidoValido = !clienteRapido.telefone || clienteRapido.telefone.replace(/\D/g, '').length >= 10;
+
+    // Cria o cliente na API e já seleciona ele no pedido - [Deyvidsk10]
+    const salvarClienteRapido = async () => {
+        if (!clienteRapido.nome.trim() || !telefoneRapidoValido) return;
+        setSalvandoCliente(true);
+        try {
+            const criado = await ClienteService.criar({
+                nome: clienteRapido.nome,
+                telefone: clienteRapido.telefone,
+                cep: null,
+                logradouro: null,
+                numero: null,
+                complemento: null,
+                bairro: null,
+                cidade: null,
+                uf: null
+            });
+            setClientes((lista) => [...lista, criado].sort((a, b) => a.nome.localeCompare(b.nome)));
+            setPedido((atual) => ({ ...atual, cliente_id: criado.id! }));
+            setFiltroCliente('');
+            setDialogCliente(false);
+            avisar('success', `Cliente "${criado.nome}" cadastrado e selecionado`);
+        } catch (error) {
+            avisar('error', mensagemErro(error));
+        } finally {
+            setSalvandoCliente(false);
+        }
+    };
+
+    // Mensagem da lista de clientes quando a busca não encontra ninguém: oferece cadastrar - [Deyvidsk10]
+    const semClienteEncontrado = (
+        <div className="flex flex-column gap-2">
+            <span>{filtroCliente ? `Nenhum cliente "${filtroCliente}".` : 'Nenhum cliente cadastrado.'}</span>
+            <Button type="button" label={filtroCliente ? `Cadastrar "${filtroCliente}"` : 'Cadastrar cliente'} icon="pi pi-user-plus" size="small" onClick={abrirClienteRapido} />
+        </div>
     );
 
     const abrirNovo = () => {
@@ -340,25 +394,33 @@ const PedidosPage = () => {
                         <div className="formgrid grid">
                             <div className="field col-12 md:col-6">
                                 <label htmlFor="cliente">Cliente *</label>
-                                <Dropdown
-                                    inputId="cliente"
-                                    value={pedido.cliente_id}
-                                    options={clientes}
-                                    optionLabel="nome"
-                                    optionValue="id"
-                                    itemTemplate={(c: Cliente) => (
-                                        <div>
-                                            <div>{c.nome}</div>
-                                            <small className="text-600">{c.telefone}</small>
-                                        </div>
-                                    )}
-                                    onChange={(e) => setPedido({ ...pedido, cliente_id: e.value })}
-                                    filter
-                                    filterBy="nome,telefone"
-                                    placeholder={clientes.length ? 'Selecione o cliente' : 'Cadastre um cliente primeiro'}
-                                    emptyFilterMessage="Nenhum cliente encontrado"
-                                    className={classNames({ 'p-invalid': enviado && !pedido.cliente_id })}
-                                />
+                                {/* Busca de cliente + botão para cadastrar um novo sem sair do pedido - [Deyvidsk10] */}
+                                <div className="p-inputgroup">
+                                    <Dropdown
+                                        ref={dropdownClienteRef}
+                                        inputId="cliente"
+                                        value={pedido.cliente_id}
+                                        options={clientes}
+                                        optionLabel="nome"
+                                        optionValue="id"
+                                        itemTemplate={(c: Cliente) => (
+                                            <div>
+                                                <div>{c.nome}</div>
+                                                {c.telefone && <small className="text-600">{c.telefone}</small>}
+                                            </div>
+                                        )}
+                                        onChange={(e) => setPedido({ ...pedido, cliente_id: e.value })}
+                                        filter
+                                        filterBy="nome,telefone"
+                                        filterPlaceholder="Digite o nome ou telefone"
+                                        onFilter={(e) => setFiltroCliente(e.filter)}
+                                        placeholder="Busque ou cadastre o cliente"
+                                        emptyFilterMessage={semClienteEncontrado}
+                                        emptyMessage={semClienteEncontrado}
+                                        className={classNames({ 'p-invalid': enviado && !pedido.cliente_id })}
+                                    />
+                                    <Button type="button" icon="pi pi-user-plus" severity="info" onClick={abrirClienteRapido} tooltip="Novo cliente" tooltipOptions={{ position: 'top' }} aria-label="Novo cliente" />
+                                </div>
                                 {enviado && !pedido.cliente_id && <small className="p-error">Selecione o cliente.</small>}
                             </div>
                             <div className="field col-12 sm:col-6 md:col-3">
@@ -398,7 +460,7 @@ const PedidosPage = () => {
                                     optionGroupChildren="items"
                                     onChange={(e) => setProdutoSelecionado(e.value)}
                                     filter
-                                    placeholder="Escolha pizza, bebida ou sobremesa"
+                                    placeholder="Escolha um produto"
                                     emptyFilterMessage="Nenhum produto encontrado"
                                 />
                             </div>
@@ -439,6 +501,43 @@ const PedidosPage = () => {
                             <label htmlFor="observacao">Observação</label>
                             <InputTextarea id="observacao" value={pedido.observacao ?? ''} onChange={(e) => setPedido({ ...pedido, observacao: e.target.value })} rows={2} autoResize placeholder="Ex.: sem cebola, troco para R$ 100..." />
                         </div>
+                    </Dialog>
+
+                    <Dialog
+                        visible={dialogCliente}
+                        style={{ width: '420px' }}
+                        breakpoints={{ '641px': '92vw' }}
+                        header="Novo cliente"
+                        modal
+                        className="p-fluid"
+                        onHide={() => setDialogCliente(false)}
+                        footer={
+                            <>
+                                <Button label="Cancelar" icon="pi pi-times" text onClick={() => setDialogCliente(false)} />
+                                <Button label="Cadastrar e usar no pedido" icon="pi pi-check" loading={salvandoCliente} disabled={!clienteRapido.nome.trim() || !telefoneRapidoValido} onClick={salvarClienteRapido} />
+                            </>
+                        }
+                    >
+                        <div className="field">
+                            <label htmlFor="clienteRapidoNome">Nome *</label>
+                            <InputText id="clienteRapidoNome" value={clienteRapido.nome} onChange={(e) => setClienteRapido({ ...clienteRapido, nome: e.target.value })} onKeyDown={(e) => e.key === 'Enter' && salvarClienteRapido()} autoFocus />
+                        </div>
+                        <div className="field">
+                            <label htmlFor="clienteRapidoTelefone">Telefone (opcional)</label>
+                            <InputText
+                                id="clienteRapidoTelefone"
+                                inputMode="tel"
+                                value={clienteRapido.telefone}
+                                onChange={(e) => setClienteRapido({ ...clienteRapido, telefone: formatarTelefone(e.target.value) })}
+                                onKeyDown={(e) => e.key === 'Enter' && salvarClienteRapido()}
+                                placeholder="(11) 98888-7777"
+                                className={classNames({ 'p-invalid': !telefoneRapidoValido })}
+                            />
+                            {!telefoneRapidoValido && <small className="p-error">Informe DDD + número.</small>}
+                        </div>
+                        <small className="text-500">
+                            <i className="pi pi-info-circle mr-1" />O endereço pode ser completado depois na tela de Clientes.
+                        </small>
                     </Dialog>
                 </div>
             </div>

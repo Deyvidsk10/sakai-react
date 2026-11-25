@@ -56,7 +56,7 @@ router.post('/login', asyncHandler(controller.login));
  * @swagger
  * /auth/register:
  *   post:
- *     summary: Cadastra um novo usuário com perfil "atendente"
+ *     summary: Cadastra um novo usuário com perfil "cliente" (o admin pode promover depois)
  *     tags: [Auth]
  *     security: []
  *     requestBody:

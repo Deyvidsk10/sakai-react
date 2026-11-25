@@ -1,8 +1,6 @@
 // Model de Produtos (pizzas, bebidas e sobremesas): acesso à tabela "produtos" - [Deyvidsk10]
 const { run, get, all } = require('../db/database');
 
-const CATEGORIAS = ['Pizza', 'Bebida', 'Sobremesa'];
-
 // Lista todos os produtos, com filtro opcional por categoria - [Deyvidsk10]
 function listarProdutos(categoria) {
     if (categoria) {
@@ -36,4 +34,4 @@ async function produtoEmPedidos(id) {
     return row.total > 0;
 }
 
-module.exports = { CATEGORIAS, listarProdutos, buscarProdutoPorId, criarProduto, atualizarProduto, excluirProduto, produtoEmPedidos };
+module.exports = { listarProdutos, buscarProdutoPorId, criarProduto, atualizarProduto, excluirProduto, produtoEmPedidos };

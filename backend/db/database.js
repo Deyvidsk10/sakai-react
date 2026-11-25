@@ -57,6 +57,63 @@ function transaction(callback) {
     return execucao;
 }
 
+// Bancos criados antes das categorias personalizadas tinham um CHECK que só aceitava
+// Pizza/Bebida/Sobremesa. O SQLite não remove CHECK, então a tabela é recriada sem ele,
+// mantendo todos os produtos e os mesmos IDs (os pedidos continuam apontando certo) - [Deyvidsk10]
+async function migrarProdutosSemCheckDeCategoria() {
+    const tabela = await get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'produtos'");
+    if (!tabela || !/CHECK\s*\(\s*categoria\s+IN/i.test(tabela.sql)) return;
+
+    console.log('Migrando tabela produtos para aceitar novas categorias...');
+    // Chaves estrangeiras desligadas durante a troca da tabela (procedimento oficial do SQLite) - [Deyvidsk10]
+    await run('PRAGMA foreign_keys = OFF');
+    try {
+        await transaction(async () => {
+            await run(`
+                CREATE TABLE produtos_nova (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    descricao TEXT,
+                    preco REAL NOT NULL CHECK (preco >= 0),
+                    categoria TEXT NOT NULL,
+                    criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+                )
+            `);
+            await run('INSERT INTO produtos_nova (id, nome, descricao, preco, categoria, criado_em) SELECT id, nome, descricao, preco, categoria, criado_em FROM produtos');
+            await run('DROP TABLE produtos');
+            await run('ALTER TABLE produtos_nova RENAME TO produtos');
+        });
+    } finally {
+        await run('PRAGMA foreign_keys = ON');
+    }
+    console.log('Migração concluída');
+}
+
+// Bancos antigos só aceitavam os perfis admin/atendente. Recria a tabela "usuarios"
+// com o perfil "cliente" liberado, mantendo todos os usuários e IDs - [Deyvidsk10]
+async function migrarUsuariosComPerfilCliente() {
+    const tabela = await get("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'usuarios'");
+    if (!tabela || tabela.sql.includes("'cliente'")) return;
+
+    console.log('Migrando tabela usuarios para aceitar o perfil cliente...');
+    await transaction(async () => {
+        await run(`
+            CREATE TABLE usuarios_nova (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                senha TEXT NOT NULL,
+                perfil TEXT NOT NULL DEFAULT 'cliente' CHECK (perfil IN ('admin', 'atendente', 'cliente')),
+                criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        `);
+        await run('INSERT INTO usuarios_nova (id, nome, email, senha, perfil, criado_em) SELECT id, nome, email, senha, perfil, criado_em FROM usuarios');
+        await run('DROP TABLE usuarios');
+        await run('ALTER TABLE usuarios_nova RENAME TO usuarios');
+    });
+    console.log('Migração concluída');
+}
+
 // Cria as tabelas (se ainda não existirem) e o usuário administrador padrão - [Deyvidsk10]
 async function initDatabase() {
     await run('PRAGMA foreign_keys = ON');
@@ -67,7 +124,7 @@ async function initDatabase() {
             nome TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             senha TEXT NOT NULL,
-            perfil TEXT NOT NULL DEFAULT 'atendente' CHECK (perfil IN ('admin', 'atendente')),
+            perfil TEXT NOT NULL DEFAULT 'cliente' CHECK (perfil IN ('admin', 'atendente', 'cliente')),
             criado_em TEXT NOT NULL DEFAULT (datetime('now'))
         )
     `);
@@ -88,13 +145,23 @@ async function initDatabase() {
         )
     `);
 
+    // Categorias de produtos (Pizza, Bebida, Sobremesa e as criadas pelo usuário) - [Deyvidsk10]
+    // COLLATE NOCASE impede duplicar "pizza" e "Pizza" - [Deyvidsk10]
+    await run(`
+        CREATE TABLE IF NOT EXISTS categorias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            criado_em TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    `);
+
     await run(`
         CREATE TABLE IF NOT EXISTS produtos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             descricao TEXT,
             preco REAL NOT NULL CHECK (preco >= 0),
-            categoria TEXT NOT NULL CHECK (categoria IN ('Pizza', 'Bebida', 'Sobremesa')),
+            categoria TEXT NOT NULL,
             criado_em TEXT NOT NULL DEFAULT (datetime('now'))
         )
     `);
@@ -120,6 +187,20 @@ async function initDatabase() {
             preco_unitario REAL NOT NULL,
             subtotal REAL NOT NULL
         )
+    `);
+
+    await migrarProdutosSemCheckDeCategoria();
+    await migrarUsuariosComPerfilCliente();
+
+    // Categorias padrão + qualquer categoria que já exista nos produtos - [Deyvidsk10]
+    // (só insere o que falta, para não "gastar" IDs a cada reinício) - [Deyvidsk10]
+    for (const nome of ['Pizza', 'Bebida', 'Sobremesa']) {
+        await run('INSERT INTO categorias (nome) SELECT ? WHERE NOT EXISTS (SELECT 1 FROM categorias WHERE nome = ?)', [nome, nome]);
+    }
+    await run(`
+        INSERT INTO categorias (nome)
+        SELECT DISTINCT p.categoria FROM produtos p
+        WHERE NOT EXISTS (SELECT 1 FROM categorias c WHERE c.nome = p.categoria)
     `);
 
     // Garante que exista ao menos um administrador para o primeiro login - [Deyvidsk10]

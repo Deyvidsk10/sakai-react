@@ -1,6 +1,7 @@
 // Tipos das entidades da Pizzaria (espelham as respostas da API) - [Deyvidsk10]
 
-export type Perfil = 'admin' | 'atendente';
+// admin: tudo | atendente: operação da pizzaria | cliente: só vê o cardápio - [Deyvidsk10]
+export type Perfil = 'admin' | 'atendente' | 'cliente';
 
 export interface Usuario {
     id?: number;
@@ -24,7 +25,14 @@ export interface Cliente {
     uf: string | null;
 }
 
-export type Categoria = 'Pizza' | 'Bebida' | 'Sobremesa';
+// Nome da categoria (Pizza, Bebida, Sobremesa ou outra criada pelo usuário) - [Deyvidsk10]
+export type Categoria = string;
+
+export interface CategoriaProduto {
+    id?: number;
+    nome: string;
+    total_produtos?: number;
+}
 
 export interface Produto {
     id?: number;

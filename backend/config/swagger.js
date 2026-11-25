@@ -26,7 +26,7 @@ const options = {
                         id: { type: 'integer', example: 1 },
                         nome: { type: 'string', example: 'Maria Souza' },
                         email: { type: 'string', example: 'maria@pizzaria.com' },
-                        perfil: { type: 'string', enum: ['admin', 'atendente'], example: 'atendente' },
+                        perfil: { type: 'string', enum: ['admin', 'atendente', 'cliente'], example: 'atendente' },
                         criado_em: { type: 'string', example: '2026-11-25 18:00:00' }
                     }
                 },
@@ -37,7 +37,7 @@ const options = {
                         nome: { type: 'string', example: 'Maria Souza' },
                         email: { type: 'string', example: 'maria@pizzaria.com' },
                         senha: { type: 'string', example: '123456', description: 'Obrigatória ao criar; opcional ao atualizar' },
-                        perfil: { type: 'string', enum: ['admin', 'atendente'], example: 'atendente' }
+                        perfil: { type: 'string', enum: ['admin', 'atendente', 'cliente'], example: 'atendente' }
                     }
                 },
                 Cliente: {
@@ -57,7 +57,7 @@ const options = {
                 },
                 ClienteInput: {
                     type: 'object',
-                    required: ['nome', 'telefone'],
+                    required: ['nome'],
                     properties: {
                         nome: { type: 'string', example: 'João da Silva' },
                         telefone: { type: 'string', example: '(11) 98888-7777' },
@@ -77,7 +77,7 @@ const options = {
                         nome: { type: 'string', example: 'Pizza Calabresa' },
                         descricao: { type: 'string', example: 'Molho, mussarela, calabresa e cebola' },
                         preco: { type: 'number', example: 49.9 },
-                        categoria: { type: 'string', enum: ['Pizza', 'Bebida', 'Sobremesa'], example: 'Pizza' }
+                        categoria: { type: 'string', example: 'Pizza', description: 'Nome de uma categoria cadastrada em /categorias' }
                     }
                 },
                 ProdutoInput: {
@@ -87,7 +87,23 @@ const options = {
                         nome: { type: 'string', example: 'Pizza Calabresa' },
                         descricao: { type: 'string', example: 'Molho, mussarela, calabresa e cebola' },
                         preco: { type: 'number', example: 49.9 },
-                        categoria: { type: 'string', enum: ['Pizza', 'Bebida', 'Sobremesa'], example: 'Pizza' }
+                        categoria: { type: 'string', example: 'Pizza', description: 'Nome de uma categoria cadastrada em /categorias' }
+                    }
+                },
+                Categoria: {
+                    type: 'object',
+                    properties: {
+                        id: { type: 'integer', example: 4 },
+                        nome: { type: 'string', example: 'Esfiha' },
+                        total_produtos: { type: 'integer', example: 3 },
+                        criado_em: { type: 'string', example: '2026-11-25 18:00:00' }
+                    }
+                },
+                CategoriaInput: {
+                    type: 'object',
+                    required: ['nome'],
+                    properties: {
+                        nome: { type: 'string', example: 'Esfiha' }
                     }
                 },
                 PedidoItem: {

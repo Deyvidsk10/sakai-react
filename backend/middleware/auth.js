@@ -1,5 +1,6 @@
 // Middlewares de autenticação JWT e de autorização por perfil - [Deyvidsk10]
 const jwt = require('jsonwebtoken');
+const { buscarUsuarioPorId } = require('../models/usuarioModel');
 
 // Verifica o token enviado no header "Authorization: Bearer <token>" - [Deyvidsk10]
 function autenticarToken(req, res, next) {
@@ -20,14 +21,28 @@ function autenticarToken(req, res, next) {
     });
 }
 
-// Libera a rota apenas para os perfis informados (ex.: somente 'admin') - [Deyvidsk10]
+// Libera a rota apenas para os perfis informados (ex.: somente 'admin').
+// O perfil é lido do banco (e não do token), então quando o admin troca o perfil
+// de alguém a mudança vale na hora, sem precisar fazer login de novo - [Deyvidsk10]
 function autorizarPerfis(...perfis) {
-    return (req, res, next) => {
-        if (!req.usuario || !perfis.includes(req.usuario.perfil)) {
-            return res.status(403).json({ message: 'Você não tem permissão para esta ação' });
+    return async (req, res, next) => {
+        try {
+            const usuario = req.usuario ? await buscarUsuarioPorId(req.usuario.id) : null;
+            if (!usuario) {
+                return res.status(401).json({ message: 'Usuário não encontrado. Faça login novamente.' });
+            }
+            req.usuario = { ...req.usuario, perfil: usuario.perfil };
+            if (!perfis.includes(usuario.perfil)) {
+                return res.status(403).json({ message: 'Você não tem permissão para esta ação' });
+            }
+            next();
+        } catch (err) {
+            next(err);
         }
-        next();
     };
 }
 
-module.exports = { autenticarToken, autorizarPerfis };
+// Atalho para as rotas da operação da pizzaria (clientes do perfil "cliente" não entram) - [Deyvidsk10]
+const somenteEquipe = autorizarPerfis('admin', 'atendente');
+
+module.exports = { autenticarToken, autorizarPerfis, somenteEquipe };

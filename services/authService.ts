@@ -46,5 +46,17 @@ export const AuthService = {
 
     ehAdmin(): boolean {
         return this.getUsuario()?.perfil === 'admin';
+    },
+
+    // Perfil "cliente" só acessa o cardápio - [Deyvidsk10]
+    ehCliente(): boolean {
+        return this.getUsuario()?.perfil === 'cliente';
+    },
+
+    // Busca os dados atuais do usuário na API (ex.: o admin mudou o perfil dele) - [Deyvidsk10]
+    async atualizarUsuario(): Promise<Usuario | null> {
+        const { data } = await api.get<{ usuario: Usuario }>('/auth/me');
+        localStorage.setItem(USUARIO_KEY, JSON.stringify(data.usuario));
+        return data.usuario;
     }
 };

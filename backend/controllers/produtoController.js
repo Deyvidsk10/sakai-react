@@ -1,8 +1,10 @@
 // Controller de Produtos: validação e regras do CRUD de produtos - [Deyvidsk10]
 const model = require('../models/produtoModel');
+const { buscarCategoriaPorNome } = require('../models/categoriaModel');
 const { HttpError, lerId, texto } = require('../utils/http');
 
-function validar(body) {
+// A categoria precisa estar cadastrada na tabela de categorias - [Deyvidsk10]
+async function validar(body) {
     const dados = {
         nome: texto(body.nome),
         descricao: texto(body.descricao),
@@ -14,9 +16,12 @@ function validar(body) {
     if (body.preco === undefined || body.preco === null || body.preco === '' || !Number.isFinite(dados.preco) || dados.preco < 0) {
         throw new HttpError(400, 'Informe um preço válido');
     }
-    if (!model.CATEGORIAS.includes(dados.categoria)) {
-        throw new HttpError(400, `Categoria inválida (use: ${model.CATEGORIAS.join(', ')})`);
+    const categoria = dados.categoria ? await buscarCategoriaPorNome(dados.categoria) : null;
+    if (!categoria) {
+        throw new HttpError(400, 'Selecione uma categoria cadastrada');
     }
+    // Usa o nome exatamente como está cadastrado (ex.: "pizza" vira "Pizza") - [Deyvidsk10]
+    dados.categoria = categoria.nome;
     // Guarda o preço sempre com 2 casas decimais - [Deyvidsk10]
     dados.preco = Math.round(dados.preco * 100) / 100;
     return dados;
@@ -34,12 +39,12 @@ async function buscar(req, res) {
 }
 
 async function criar(req, res) {
-    const produto = await model.criarProduto(validar(req.body));
+    const produto = await model.criarProduto(await validar(req.body));
     res.status(201).json({ message: 'Produto criado com sucesso', produto });
 }
 
 async function atualizar(req, res) {
-    const produto = await model.atualizarProduto(lerId(req), validar(req.body));
+    const produto = await model.atualizarProduto(lerId(req), await validar(req.body));
     if (!produto) throw new HttpError(404, 'Produto não encontrado');
     res.json({ message: 'Produto atualizado com sucesso', produto });
 }

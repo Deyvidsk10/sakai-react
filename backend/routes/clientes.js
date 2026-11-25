@@ -1,12 +1,13 @@
 // Rotas do CRUD de Clientes (protegidas por JWT) - [Deyvidsk10]
 const express = require('express');
 const controller = require('../controllers/clienteController');
-const { autenticarToken } = require('../middleware/auth');
+const { autenticarToken, somenteEquipe } = require('../middleware/auth');
 const { asyncHandler } = require('../utils/http');
 
 const router = express.Router();
 
-router.use(autenticarToken);
+// Exige login e perfil admin ou atendente - [Deyvidsk10]
+router.use(autenticarToken, somenteEquipe);
 
 /**
  * @swagger

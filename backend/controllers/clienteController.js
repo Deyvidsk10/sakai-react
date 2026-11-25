@@ -17,8 +17,11 @@ function validar(body) {
     };
 
     if (!dados.nome) throw new HttpError(400, 'O nome é obrigatório');
-    if (!dados.telefone) throw new HttpError(400, 'O telefone é obrigatório');
-    if (dados.telefone.replace(/\D/g, '').length < 10) throw new HttpError(400, 'Telefone inválido (informe DDD + número)');
+    // Telefone é opcional (permite o cadastro rápido só com o nome na tela de pedidos),
+    // mas se for informado precisa ter DDD + número - [Deyvidsk10]
+    if (dados.telefone && dados.telefone.replace(/\D/g, '').length < 10) throw new HttpError(400, 'Telefone inválido (informe DDD + número)');
+    // A coluna no banco é NOT NULL, então "sem telefone" é gravado como texto vazio - [Deyvidsk10]
+    dados.telefone = dados.telefone ?? '';
     if (dados.cep && dados.cep.replace(/\D/g, '').length !== 8) throw new HttpError(400, 'CEP inválido');
     if (dados.uf && !/^[A-Z]{2}$/.test(dados.uf)) throw new HttpError(400, 'UF inválida');
 

@@ -37,6 +37,7 @@ app.get('/', (req, res) => {
 app.use('/auth', require('./routes/auth'));
 app.use('/usuarios', require('./routes/usuarios'));
 app.use('/clientes', require('./routes/clientes'));
+app.use('/categorias', require('./routes/categorias'));
 app.use('/produtos', require('./routes/produtos'));
 app.use('/pedidos', require('./routes/pedidos'));
 
